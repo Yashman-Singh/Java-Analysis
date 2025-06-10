@@ -1,0 +1,1 @@
+"""Analysis modules for Java project architecture.""" 

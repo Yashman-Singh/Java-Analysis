@@ -1,0 +1,1 @@
+"""Core functionality for Java project architecture analysis.""" 
