@@ -15,7 +15,7 @@ A production-grade Python system for analyzing Java project architecture, provid
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd java-architecture-analyzer
+cd java-analysis
 ```
 
 2. Create and activate a virtual environment:
@@ -27,6 +27,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 3. Install dependencies:
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
 
 4. Set up environment variables:
@@ -44,7 +45,7 @@ java-analyzer analyze /path/to/java/project
 
 Advanced usage:
 ```bash
-java-analyzer analyze /path/to/java/project --max-files 20 --output report.md
+java-analyzer analyze /path/to/java/project --max-files 20 --output report.md --verbose
 ```
 
 For more options:
@@ -58,52 +59,18 @@ java-analyzer --help
 java-architecture-analyzer/
 ├── src/
 │   ├── analyzers/
-│   │   ├── file_analyzer.py
-│   │   └── llm_analyzer.py
+│   │   ├── file_analyzer.py    # Java file parsing and analysis
+│   │   └── llm_analyzer.py     # LLM integration and analysis
 │   ├── core/
-│   │   ├── config.py
-│   │   └── models.py
+│   │   ├── config.py          # Configuration management
+│   │   ├── models.py          # Data models
+│   │   └── report_generator.py # Report generation
 │   ├── utils/
-│   │   ├── file_utils.py
-│   │   └── prompt_utils.py
-│   └── cli.py
+│   │   ├── file_utils.py      # File operations
+│   │   └── prompt_utils.py    # LLM prompt management
+│   └── cli.py                 # Command-line interface
 ├── tests/
 │   └── test_analyzers.py
 ├── requirements.txt
 └── README.md
 ```
-
-## Development
-
-1. Install development dependencies:
-```bash
-pip install -r requirements-dev.txt
-```
-
-2. Run tests:
-```bash
-pytest
-```
-
-3. Run type checking:
-```bash
-mypy src/
-```
-
-4. Format code:
-```bash
-black src/
-isort src/
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-MIT License - see LICENSE file for details 

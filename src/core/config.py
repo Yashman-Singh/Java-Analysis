@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     
     # LLM Provider Settings
     LLM_PROVIDER: str = "openai"  # or "azure"
-    MODEL_NAME: str = "gpt-4-turbo-preview"  # OpenAI model name or Azure deployment name
+    MODEL_NAME: str = "gpt-4o"  # OpenAI model name or Azure deployment name
     MAX_TOKENS: int = 1000  # Maximum tokens for LLM responses
     
     # OpenAI Settings

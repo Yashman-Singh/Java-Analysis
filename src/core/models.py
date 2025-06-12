@@ -27,12 +27,45 @@ class FileImport(BaseModel):
     is_static: bool = False
 
 
+class FileImportance(BaseModel):
+    """Importance metrics for a Java file."""
+    is_main_class: bool = False
+    is_entry_point: bool = False
+    is_config_file: bool = False
+    complexity_score: float = 0.0
+    dependency_score: float = 0.0
+    business_logic_score: float = 0.0
+    total_score: float = 0.0
+
+    def calculate_total_score(self) -> float:
+        """Calculate the total importance score."""
+        weights = {
+            'is_main_class': 5.0,
+            'is_entry_point': 4.0,
+            'is_config_file': 3.0,
+            'complexity_score': 2.0,
+            'dependency_score': 2.0,
+            'business_logic_score': 3.0
+        }
+        
+        self.total_score = (
+            (self.is_main_class * weights['is_main_class']) +
+            (self.is_entry_point * weights['is_entry_point']) +
+            (self.is_config_file * weights['is_config_file']) +
+            (self.complexity_score * weights['complexity_score']) +
+            (self.dependency_score * weights['dependency_score']) +
+            (self.business_logic_score * weights['business_logic_score'])
+        )
+        return self.total_score
+
+
 class JavaFile(BaseModel):
     """Represents a Java source file."""
     path: Path
     content: str
     package: str
     file_type: str
+    importance: FileImportance = Field(default_factory=FileImportance)
 
 
 class AnalysisResult(BaseModel):
@@ -57,11 +90,12 @@ class LLMResponse(BaseModel):
 
 
 class ProjectAnalysis(BaseModel):
-    """Complete analysis of a Java project."""
+    """Model for project-wide analysis results."""
     project_path: str
-    analyzed_files: List[LLMResponse]
+    analysis_timestamp: datetime
+    execution_time: float
     architecture_summary: str
     design_patterns: Dict[str, List[str]]
-    quality_metrics: Dict[str, float]
+    code_quality_metrics: Dict[str, float]
     recommendations: List[str]
-    execution_time_seconds: float 
+    file_analyses: List[LLMResponse] 

@@ -123,4 +123,4 @@ logs/
 .java-analyzer/
 
 # Ignore analysis outputs
-analysis_report.md 
+project_summary.md 

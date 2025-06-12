@@ -6,7 +6,7 @@ import pytest
 
 from src.analyzers.file_analyzer import FileAnalyzer
 from src.analyzers.llm_analyzer import LLMAnalyzer
-from src.core.models import FileType, JavaFile
+from src.core.models import FileType, JavaFile, FileImportance
 
 
 @pytest.fixture
@@ -44,32 +44,24 @@ def temp_project_dir(tmp_path, sample_java_file):
 
 def test_file_analyzer_initialization(temp_project_dir):
     """Test FileAnalyzer initialization."""
-    analyzer = FileAnalyzer(str(temp_project_dir))
-    assert analyzer.project_path == temp_project_dir
-    assert isinstance(analyzer.java_files, dict)
-    assert isinstance(analyzer.file_importance_scores, dict)
+    analyzer = FileAnalyzer()
+    files = analyzer.analyze_project(temp_project_dir)
+    assert len(files) == 1
+    assert isinstance(files[0], JavaFile)
+    assert isinstance(files[0].importance, FileImportance)
 
 
-def test_file_analyzer_find_java_files(temp_project_dir):
-    """Test finding Java files in a project."""
-    analyzer = FileAnalyzer(str(temp_project_dir))
-    java_files = analyzer._find_java_files()
-    assert len(java_files) == 1
-    assert java_files[0].name == "SampleService.java"
-
-
-def test_file_analyzer_determine_file_type(sample_java_file):
-    """Test determining file type from content."""
-    analyzer = FileAnalyzer("dummy_path")
-    file_type = analyzer._determine_file_type(sample_java_file, "SampleService.java")
-    assert file_type == FileType.SERVICE
-
-
-@patch("openai.ChatCompletion.create")
-def test_llm_analyzer_initialization(mock_openai):
-    """Test LLMAnalyzer initialization."""
-    analyzer = LLMAnalyzer()
-    assert analyzer is not None
+def test_file_analyzer_importance_calculation(sample_java_file):
+    """Test file importance calculation."""
+    analyzer = FileAnalyzer()
+    importance = analyzer._calculate_file_importance(
+        Path("test.java"),
+        sample_java_file,
+        "class"
+    )
+    assert isinstance(importance, FileImportance)
+    assert importance.business_logic_score > 0  # Should detect @Service
+    assert importance.total_score > 0
 
 
 @patch("openai.ChatCompletion.create")
@@ -96,14 +88,11 @@ def test_llm_analyzer_analyze_single_file(mock_openai):
     
     analyzer = LLMAnalyzer()
     java_file = JavaFile(
-        path="test.java",
+        path=Path("test.java"),
         package="com.example",
-        imports=[],
-        file_type=FileType.SERVICE,
-        importance_score=0.0,
         content="test",
-        last_modified=None,
-        size_bytes=0
+        file_type="class",
+        importance=FileImportance()
     )
     
     result = analyzer._analyze_single_file(java_file)
@@ -111,4 +100,62 @@ def test_llm_analyzer_analyze_single_file(mock_openai):
     assert result.design_patterns == ["Service Pattern"]
     assert result.quality_issues == []
     assert result.recommendations == ["Add documentation"]
-    assert result.confidence_score == 0.9 
+    assert result.confidence_score == 0.9
+
+
+@patch("openai.ChatCompletion.create")
+def test_llm_analyzer_batch_analysis(mock_openai):
+    """Test batch analysis of multiple files."""
+    # Mock LLM response for batch analysis
+    mock_response = {
+        "choices": [{
+            "message": {
+                "content": """
+                [
+                    {
+                        "file_path": "test1.java",
+                        "architectural_insights": ["Service implementation"],
+                        "design_patterns": ["Service Pattern"],
+                        "quality_issues": [],
+                        "recommendations": ["Add docs"],
+                        "confidence_score": 0.9,
+                        "token_usage": {"total": 100}
+                    },
+                    {
+                        "file_path": "test2.java",
+                        "architectural_insights": ["Repository implementation"],
+                        "design_patterns": ["Repository Pattern"],
+                        "quality_issues": [],
+                        "recommendations": ["Add docs"],
+                        "confidence_score": 0.9,
+                        "token_usage": {"total": 100}
+                    }
+                ]
+                """
+            }
+        }]
+    }
+    mock_openai.return_value = mock_response
+    
+    analyzer = LLMAnalyzer()
+    files = [
+        JavaFile(
+            path=Path("test1.java"),
+            package="com.example",
+            content="test1",
+            file_type="class",
+            importance=FileImportance()
+        ),
+        JavaFile(
+            path=Path("test2.java"),
+            package="com.example",
+            content="test2",
+            file_type="class",
+            importance=FileImportance()
+        )
+    ]
+    
+    results = analyzer._analyze_file_batch(files)
+    assert len(results) == 2
+    assert results[0].file_path == Path("test1.java")
+    assert results[1].file_path == Path("test2.java") 
