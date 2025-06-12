@@ -21,7 +21,9 @@ class ReportGenerator:
             # Project Overview
             report.append("# Java Project Analysis Report\n")
             report.append(f"## Project Overview\n")
-            report.append(f"- **Project Path:** {analysis.project_path}\n")
+            # Normalize project path for display
+            project_path = str(analysis.project_path).replace('\\', '/')
+            report.append(f"- **Project Path:** {project_path}\n")
             report.append(f"- **Analysis Timestamp:** {datetime.now().isoformat()}\n")
             report.append(f"- **Execution Time:** {analysis.execution_time:.2f} seconds\n")
             report.append(f"- **Files Analyzed:** {len(analysis.file_analyses)}\n\n")
@@ -49,14 +51,16 @@ class ReportGenerator:
                 file_width = max(len("File"), max(len(file) for file in analysis.code_quality_metrics.keys()))
                 issues_width = max(len("Issues"), max(len(str(issues)) for issues in analysis.code_quality_metrics.values()))
                 
-                # Create header
-                report.append(f"| {'File':<{file_width}} | {'Issues':<{issues_width}} |\n")
-                report.append(f"|{'-' * (file_width + 2)}|{'-' * (issues_width + 2)}|\n")
+                # Create header and separator
+                report.append(f"| {'File':<{file_width}} | {'Issues':<{issues_width}} |")
+                report.append(f"|{'-' * file_width}|{'-' * issues_width}|")
                 
                 # Add rows
                 for file, issues in analysis.code_quality_metrics.items():
-                    report.append(f"| {file:<{file_width}} | {str(issues):<{issues_width}} |\n")
-                report.append("\n")
+                    report.append(f"| {file:<{file_width}} | {str(issues):<{issues_width}} |")
+                
+                # Add newline after table
+                report.append("")
             else:
                 report.append("No quality metrics available.\n\n")
 

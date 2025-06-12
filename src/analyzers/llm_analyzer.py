@@ -206,8 +206,12 @@ For each file, provide a JSON array of objects with this exact format (no markdo
                 for result in results:
                     # Find the corresponding file using relative paths
                     file_path = result.get('file_path', '')
+                    # Normalize the file path from LLM response
+                    file_path = file_path.replace('\\', '/').replace('//', '/')
+                    
+                    # Get relative paths for comparison
                     matching_file = next(
-                        (f for f in files if sanitize_path(f.path, self.project_root) == file_path),
+                        (f for f in files if str(f.path.relative_to(self.project_root)).replace('\\', '/') == file_path),
                         None
                     )
                     
@@ -224,6 +228,7 @@ For each file, provide a JSON array of objects with this exact format (no markdo
                         responses.append(response)
                     else:
                         logger.warning(f"Could not match file path in response: {file_path}")
+                        logger.debug(f"Available files: {[str(f.path.relative_to(self.project_root)).replace('\\', '/') for f in files]}")
 
                 return responses
 
